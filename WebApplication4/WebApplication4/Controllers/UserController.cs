@@ -1,19 +1,33 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using WebApplication4.Model;
 
 namespace WebApplication4.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
+    
     public class UserController : ControllerBase
+        
     {
+
+        public UserController(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
         db DB = new db();
+
+        public IConfiguration Configuration { get; }
 
         [HttpGet]
         public List<User> GetUser()
@@ -40,7 +54,7 @@ namespace WebApplication4.Controllers
             }
             return UserLists;
         }
-
+        [Route("GetUserBYID")]
         [HttpGet("{id}")]
         public List<User> GetUserBYID(int id)
         {
@@ -68,7 +82,7 @@ namespace WebApplication4.Controllers
             return UserList;
         }
 
-
+        [Route("AddUser")]
         [HttpPost]
         public string AddUser([FromBody] User user)
            
@@ -85,6 +99,78 @@ namespace WebApplication4.Controllers
                 Message=ex.Message;
             }
             return Message;
+        }
+
+
+        [Route("Login")]
+        [HttpPost]
+        public string Login([FromBody] User user)
+
+        {
+            string Message = string.Empty;
+             DataSet ds = new DataSet();
+
+            List<User> UserList = new List<User>();
+
+            try
+            {
+                ds = DB.Login(user);// this function will return message if success or field
+
+                Console.WriteLine(ds);
+                Console.WriteLine(ds.Tables[0]);
+                Console.WriteLine(ds.Tables[0].Rows);
+                if (ds.Tables[0].Rows ==null)
+                {
+                    return "This Email is not existe";
+                }
+            }
+            catch (Exception ex)
+            {
+
+                Message = ex.Message;
+            }
+            try
+            {
+                foreach (DataRow dr in ds.Tables[0].Rows)
+                {
+                    UserList.Add(new User
+                    {
+                        id = Convert.ToInt32(dr["id"]),
+                        UserName = dr["UserName"].ToString(),
+                        firstname = dr["firstname"].ToString(),
+                        lastname = dr["lastname"].ToString(),
+                        Password = dr["Password"].ToString(),
+                        dob = dr["dob"].ToString(),
+                        role = dr["role"].ToString(),
+                        contactno = dr["contactno"].ToString(),
+                        gender = dr["gender"].ToString(),
+                        Email = dr["Email"].ToString(),
+                    });
+                }
+                Console.WriteLine(UserList);
+
+                var authClaims = new List<Claim>
+                    {
+                     new Claim(ClaimTypes.Name,user.Email),
+                     new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString())
+                    };
+                    var authSignKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["JWT:Secret"]));
+                    var token = new JwtSecurityToken(
+               issuer: Configuration["JWT:ValidIssuer"],
+               audience: Configuration["JWT:ValidAudience"],
+               expires: DateTime.Now.AddDays(1),
+               claims: authClaims,
+               signingCredentials: new SigningCredentials(authSignKey, SecurityAlgorithms.HmacSha256Signature)
+               );
+
+                    return new JwtSecurityTokenHandler().WriteToken(token);
+                
+            }
+            catch (Exception )
+            {
+
+                throw ;
+            }
         }
 
     }

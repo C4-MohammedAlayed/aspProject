@@ -82,7 +82,7 @@ namespace WebApplication4.Model
                 com.Parameters.AddWithValue("@role", user.role);
                 com.Parameters.AddWithValue("@contactno", user.contactno);
                 com.Parameters.AddWithValue("@gender", user.gender);
-               
+                
                
                  SqlDataAdapter da = new SqlDataAdapter(com);
                 da.Fill(ds);
@@ -94,6 +94,35 @@ namespace WebApplication4.Model
 
                 Message = ex.Message;
             }
+            return ds;
+        }
+
+        //Login
+        public DataSet Login(User user)
+        {
+            string Message = string.Empty;
+            DataSet ds = new DataSet();
+            try
+            {
+                SqlCommand com = new SqlCommand("Login", con);// first parameter is the name of strodProsduer
+
+                com.CommandType = System.Data.CommandType.StoredProcedure;             
+                com.Parameters.AddWithValue("@Email", user.Email);
+
+
+
+                SqlDataAdapter da = new SqlDataAdapter(com);
+                da.Fill(ds);
+
+
+            }
+            catch (Exception ex)
+            {
+
+                Message = ex.Message;
+            }
+            
+            
             return ds;
         }
 
