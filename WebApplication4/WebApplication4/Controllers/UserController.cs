@@ -108,21 +108,17 @@ namespace WebApplication4.Controllers
 
         {
             string Message = string.Empty;
-             DataSet ds = new DataSet();
-
-            List<User> UserList = new List<User>();
+           
 
             try
             {
-                ds = DB.Login(user);// this function will return message if success or field
+                Message = DB.Login(user);// this function will return message if success or field
 
-                Console.WriteLine(ds);
-                Console.WriteLine(ds.Tables[0]);
-                Console.WriteLine(ds.Tables[0].Rows);
-                if (ds.Tables[0].Rows ==null)
+                if (Message != "1")
                 {
-                    return "This Email is not existe";
+                    return "not Coreect";
                 }
+               
             }
             catch (Exception ex)
             {
@@ -130,25 +126,7 @@ namespace WebApplication4.Controllers
                 Message = ex.Message;
             }
             try
-            {
-                foreach (DataRow dr in ds.Tables[0].Rows)
-                {
-                    UserList.Add(new User
-                    {
-                        id = Convert.ToInt32(dr["id"]),
-                        UserName = dr["UserName"].ToString(),
-                        firstname = dr["firstname"].ToString(),
-                        lastname = dr["lastname"].ToString(),
-                        Password = dr["Password"].ToString(),
-                        dob = dr["dob"].ToString(),
-                        role = dr["role"].ToString(),
-                        contactno = dr["contactno"].ToString(),
-                        gender = dr["gender"].ToString(),
-                        Email = dr["Email"].ToString(),
-                    });
-                }
-                Console.WriteLine(UserList);
-
+            {  
                 var authClaims = new List<Claim>
                     {
                      new Claim(ClaimTypes.Name,user.Email),

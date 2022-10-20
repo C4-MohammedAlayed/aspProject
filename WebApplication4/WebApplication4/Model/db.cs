@@ -28,7 +28,7 @@ namespace WebApplication4.Model
             string Message = string.Empty;
             try
             {
-                SqlCommand com = new SqlCommand("SpUsers", con);// first parameter is the name of strodProsduer
+                SqlCommand com = new SqlCommand("SaveUsers", con);// first parameter is the name of strodProsduer
 
                 com.CommandType = System.Data.CommandType.StoredProcedure;
                 com.Parameters.AddWithValue("@id", user.id);
@@ -98,21 +98,30 @@ namespace WebApplication4.Model
         }
 
         //Login
-        public DataSet Login(User user)
+        public string Login(User user)
         {
             string Message = string.Empty;
             DataSet ds = new DataSet();
+            int status=1;
             try
             {
                 SqlCommand com = new SqlCommand("Login", con);// first parameter is the name of strodProsduer
 
                 com.CommandType = System.Data.CommandType.StoredProcedure;             
                 com.Parameters.AddWithValue("@Email", user.Email);
+                com.Parameters.AddWithValue("@Password", user.Password);
 
 
-
-                SqlDataAdapter da = new SqlDataAdapter(com);
-                da.Fill(ds);
+                con.Open();
+                Message = com.ExecuteNonQuery().ToString();
+                status = Convert.ToInt16(com.ExecuteScalar());
+                if (status == 1)
+                {
+                    return status.ToString();
+                }
+                                         // will return 0 or 1
+                con.Close();
+              
 
 
             }
@@ -121,9 +130,15 @@ namespace WebApplication4.Model
 
                 Message = ex.Message;
             }
-            
-            
-            return ds;
+            finally
+            {
+                if (con.State == System.Data.ConnectionState.Open)
+                {
+                    con.Close();
+                }
+            }
+             return status.ToString();
+
         }
 
     }
